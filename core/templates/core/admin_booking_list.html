@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Bookings - RentalOutfit{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900">Manage Bookings</h1>
+                <p class="text-gray-500 mt-1">Accept, track, and complete orders from your customers.</p>
+            </div>
+            
+            <!-- Filters -->
+            <div class="mt-4 md:mt-0 flex space-x-2">
+                <a href="?status=" class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold hover:border-indigo-500 transition {% if not request.GET.status %}ring-2 ring-indigo-500 border-indigo-500{% endif %}">All</a>
+                <a href="?status=Pending" class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold hover:border-yellow-500 transition {% if request.GET.status == 'Pending' %}ring-2 ring-yellow-500 border-yellow-500{% endif %}">Pending</a>
+                <a href="?status=Confirmed" class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold hover:border-blue-500 transition {% if request.GET.status == 'Confirmed' %}ring-2 ring-blue-500 border-blue-500{% endif %}">Confirmed</a>
+                <a href="?status=Returned" class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold hover:border-green-500 transition {% if request.GET.status == 'Returned' %}ring-2 ring-green-500 border-green-500{% endif %}">Completed</a>
+            </div>
+        </div>
+
+        <!-- Bookings List -->
+        <div class="space-y-6">
+            {% for booking in bookings %}
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
+                <div class="p-6 sm:p-8">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                        <!-- Booking Details -->
+                        <div class="flex items-start space-x-6">
+                            <div class="flex-shrink-0">
+                                {% if booking.outfit.image %}
+                                <img src="{{ booking.outfit.image.url }}" alt="{{ booking.outfit.name }}" class="w-24 h-24 object-cover rounded-2xl">
+                                {% else %}
+                                <div class="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 font-bold">No Image</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-3 mb-1">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">ID: #{{ booking.id }}</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold
+                                        {% if booking.status == 'Pending' %}bg-yellow-100 text-yellow-700
+                                        {% elif booking.status == 'Confirmed' %}bg-blue-100 text-blue-700
+                                        {% elif booking.status == 'Rented' %}bg-green-100 text-green-700
+                                        {% elif booking.status == 'Returned' %}bg-gray-100 text-gray-700
+                                        {% elif booking.status == 'Cancelled' %}bg-red-100 text-red-700
+                                        {% endif %}">
+                                        {{ booking.status }}
+                                    </span>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900">{{ booking.outfit.name }}</h3>
+                                <p class="text-gray-500 text-sm mt-1">Customer: <span class="text-gray-900 font-semibold">{{ booking.user.get_full_name|default:booking.user.username }}</span> ({{ booking.user.phone }})</p>
+                                <p class="text-gray-500 text-sm italic">{{ booking.user.address }}, {{ booking.user.city }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Price & Dates -->
+                        <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-12">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Dates</p>
+                                <p class="text-sm font-semibold text-gray-900 tabular-nums">{{ booking.start_date|date:"M d" }} - {{ booking.end_date|date:"M d, Y" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Total</p>
+                                <p class="text-xl font-extrabold text-indigo-600 tabular-nums">₹{{ booking.total_price }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons for All Rows -->
+                        <div class="flex flex-wrap gap-2 pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-100">
+                            {% if booking.status == 'Pending' %}
+                                <a href="{% url 'update_booking_status' booking.pk 'Confirmed' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition">Accept Order</a>
+                                <a href="{% url 'update_booking_status' booking.pk 'Cancelled' %}" class="bg-white text-red-600 border border-red-100 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-50 transition">Reject</a>
+                            {% elif booking.status == 'Confirmed' %}
+                                <a href="{% url 'update_booking_status' booking.pk 'Rented' %}" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition">Out for Delivery</a>
+                                <a href="{% url 'update_booking_status' booking.pk 'Cancelled' %}" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-50 hover:text-red-600 transition">Cancel</a>
+                            {% elif booking.status == 'Rented' %}
+                                <a href="{% url 'update_booking_status' booking.pk 'Returned' %}" class="bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:opacity-80 transition">Mark as Returned</a>
+                            {% elif booking.status == 'Returned' or booking.status == 'Cancelled' %}
+                                <a href="{% url 'update_booking_status' booking.pk 'Pending' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 hover:text-indigo-700 transition">Restore to Pending</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="bg-white p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
+                <p class="text-gray-500 text-lg">No bookings matches this filter.</p>
+                <a href="{% url 'admin_booking_list' %}" class="text-indigo-600 font-bold mt-2 inline-block">View all bookings</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

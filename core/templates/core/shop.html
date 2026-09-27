@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop Outfits - RentalOutfit{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col md:flex-row gap-8">
+        <!-- Sidebar Filters -->
+        <aside class="w-full md:w-64 flex-shrink-0">
+            <div class="bg-white p-6 rounded-2xl shadow-sm sticky top-24">
+                <h3 class="text-lg font-bold mb-4">Categories</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'shop' %}" class="text-gray-600 hover:text-indigo-600 {% if not request.GET.category %}font-bold text-indigo-600{% endif %}">All Categories</a>
+                    </li>
+                    {% for category in categories %}
+                    <li>
+                        <a href="{% url 'shop' %}?category={{ category.slug }}" class="text-gray-600 hover:text-indigo-600 {% if request.GET.category == category.slug %}font-bold text-indigo-600{% endif %}">
+                            {{ category.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <hr class="my-6">
+
+                <form action="{% url 'shop' %}" method="get">
+                    <h3 class="text-lg font-bold mb-4">Search</h3>
+                    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search outfits..." class="w-full border-gray-200 rounded-lg text-sm mb-4 focus:ring-indigo-500">
+                    {% if request.GET.category %}
+                    <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    {% endif %}
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">Search</button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Product Grid -->
+        <div class="flex-grow">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold">Our Collection</h1>
+                <p class="text-gray-500">{{ outfits|length }} outfits found</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for outfit in outfits %}
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition">
+                    <div class="relative h-64">
+                        {% if outfit.image %}
+                        <img src="{{ outfit.image.url }}" alt="{{ outfit.name }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full bg-gray-100 flex items-center justify-center">No Image</div>
+                        {% endif %}
+                        <div class="absolute top-4 left-4 bg-indigo-600 text-white px-2 py-0.5 rounded text-xs font-bold uppercase">
+                            {{ outfit.get_size_display }}
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-lg font-bold text-gray-900 truncate">{{ outfit.name }}</h3>
+                        <p class="text-gray-500 text-sm mt-1">{{ outfit.category.name }}</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-xl font-bold">₹{{ outfit.price_per_day }}<span class="text-sm font-normal text-gray-400">/day</span></span>
+                            <a href="{% url 'outfit_detail' outfit.pk %}" class="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-600 hover:text-white transition">Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-20">
+                    <p class="text-gray-500 text-xl font-medium">No outfits match your search.</p>
+                    <a href="{% url 'shop' %}" class="text-indigo-600 mt-2 block underline">Clear all filters</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

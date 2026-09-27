@@ -1,0 +1,157 @@
+{% load static tailwind_tags django_browser_reload %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Online Rental Outfit Platform{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% tailwind_css %}
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50" x-data="{ open: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{% url 'landing' %}"
+                            class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            RentalOutfit
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-8 items-center">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <!-- Admin specific links -->
+                            <a href="{% url 'admin_dashboard' %}" class="text-indigo-600 px-1 pt-1 border-b-2 border-indigo-500 font-bold">Admin Dash</a>
+                            <a href="{% url 'admin_booking_list' %}" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">Manage Bookings</a>
+                            <a href="/admin/core/outfit/" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">Inventory</a>
+                        {% else %}
+                            <!-- Regular User specific links -->
+                            <a href="{% url 'home' %}" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">Home</a>
+                            <a href="{% url 'shop' %}" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">Outfits</a>
+                            <a href="{% url 'my_bookings' %}" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">My Bookings</a>
+                        {% endif %}
+                        
+                        <span class="text-gray-500 font-medium ml-4">Hi, {{ user.username }}</span>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition font-bold">Logout</button>
+                        </form>
+                    {% else %}
+                        <!-- Visual links for guests -->
+                        <a href="{% url 'landing' %}" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">Home</a>
+                        <a href="{% url 'shop' %}" class="text-gray-900 px-1 pt-1 border-b-2 border-transparent hover:border-indigo-500 transition-colors">Outfits</a>
+                        <a href="{% url 'login' %}" class="text-indigo-600 font-semibold">Login</a>
+                        <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Register</a>
+                    {% endif %}
+                </div>
+                <!-- Mobile menu button -->
+                <div class="flex items-center sm:hidden">
+                    <button @click="open = !open" class="text-gray-500 hover:text-gray-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path :class="{'hidden': open, 'inline-flex': !open }" class="inline-flex"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                            <path :class="{'hidden': !open, 'inline-flex': open }" class="hidden" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div x-show="open" class="sm:hidden bg-white border-t border-gray-100">
+            <div class="pt-2 pb-3 space-y-1 px-4">
+                {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin_dashboard' %}" class="block text-indigo-600 font-bold py-2">Admin Dash</a>
+                        <a href="{% url 'admin_booking_list' %}" class="block text-gray-900 py-2">Manage Bookings</a>
+                        <a href="/admin/core/outfit/" class="block text-gray-900 py-2">Inventory</a>
+                    {% else %}
+                        <a href="{% url 'home' %}" class="block text-gray-900 py-2">Home</a>
+                        <a href="{% url 'shop' %}" class="block text-gray-900 py-2">Outfits</a>
+                        <a href="{% url 'my_bookings' %}" class="block text-gray-900 py-2">My Bookings</a>
+                    {% endif %}
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full text-left text-red-600 font-bold py-2">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'landing' %}" class="block text-gray-900 py-2">Home</a>
+                    <a href="{% url 'shop' %}" class="block text-gray-900 py-2">Outfits</a>
+                    <a href="{% url 'login' %}" class="block text-gray-900 py-2">Login</a>
+                    <a href="{% url 'register' %}" class="block text-indigo-600 py-2 font-bold">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+        {% for message in messages %}
+        <div
+            class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">RentalOutfit</h3>
+                    <p class="text-gray-400">Rent premium outfits for weddings, parties, and special occasions. Look
+                        stunning without breaking the bank.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        {% if user.is_staff %}
+                            <li><a href="{% url 'admin_dashboard' %}" class="hover:text-white">Admin Dashboard</a></li>
+                            <li><a href="{% url 'admin_booking_list' %}" class="hover:text-white">Manage Bookings</a></li>
+                            <li><a href="/admin/core/outfit/" class="hover:text-white">Manage Inventory</a></li>
+                        {% else %}
+                            <li><a href="{% url 'home' %}" class="hover:text-white">Home</a></li>
+                            <li><a href="{% url 'shop' %}" class="hover:text-white">All Outfits</a></li>
+                            <li><a href="{% url 'landing' %}#process" class="hover:text-white">How it Works</a></li>
+                        {% endif %}
+                        <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact Us</h4>
+                    <p class="text-gray-400">Email: support@rentaloutfit.com</p>
+                    <p class="text-gray-400">Phone: +91 98765 43210</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+                &copy; 2026 Online Rental Outfit Platform. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    {% django_browser_reload_script %}
+</body>
+
+</html>
